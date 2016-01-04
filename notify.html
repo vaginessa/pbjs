@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PushBullet Node.js Notification</title>
+        <script src="/socket.io/socket.io.js"></script>
+        <script type="text/javascript">
+            var notifications = [];
+
+            Array.prototype.remove = function(notification_id) {
+                for(var i = 0, len = this.length; i < len; ++i) {
+                    if (this[i] && this[i].tag == notification_id) {
+                        this[i].close();
+                        this.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        
+            var socketio = io.connect(window.location.hostname);
+            
+            socketio.on("conectou", function(data) {
+				var data = { "title": "WebSocket aberto", "body": data.message};
+                notifyMe(data);
+			});
+			
+			socketio.on("erro", function(data) {
+				var data = { "title": "WebSocket erro", "body": data.message};
+                notifyMe(data);
+			});
+			
+			socketio.on("erro", function(data) {
+				var data = { "fechou": "WebSocket fechou", "body": data.message};
+                notifyMe(data);
+			});
+            
+            socketio.on("mensagem", function(e) {
+                var json = e.data;
+                if (json.type == "push") {
+                    if (json.push.type == "mirror") {
+                        notifyMe(json.push);
+                    }
+                    if (json.push.type == "dismissal") {
+                        notifications.remove(json.push.notification_id);
+                    }
+                }
+			});
+			
+			function openSocket(apiKey) {
+			    socketio.emit("conectar", { apiKey : apiKey});
+			}
+			
+			function notifyMe(data) {
+                if (!Notification) {
+                    alert('Please us a modern version of Chrome, Firefox, Opera or Firefox.');
+                    return;
+                }
+            
+                if (Notification.permission !== "granted")
+                    Notification.requestPermission();
+            
+                var notification_id = (data.notification_id) ? data.notification_id : 0;
+            
+                var notification = new Notification( data.title, {
+                    icon: 'data:image/jpeg;base64,' + data.icon,
+                    body: data.body,
+                    tag : notification_id
+                });
+            
+                notification.onclick = function() {
+                    notifications.remove(this.tag);
+                }
+            
+                notification.onclose =  function() {
+                    notifications.remove(this.tag);
+                }
+            
+                notifications.push(notification);
+            }
+        </script>
+    </head>
+    <body>
+    </body>
+</html>
