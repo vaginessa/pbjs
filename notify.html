@@ -43,6 +43,10 @@
                         notifications.remove(json.push.notification_id);
                     }
                 }
+                
+                var curdate = new Date();
+                var msg = "Ultima mensagem recebida as " + curdate.getHours() + ":" + curdate.getMinutes();
+                document.getElementById('display').innerHTML = msg;
 			});
 			
 			function openSocket(apiKey) {
@@ -79,5 +83,6 @@
         </script>
     </head>
     <body>
+        <h3 id="display"></h3>
     </body>
 </html>
